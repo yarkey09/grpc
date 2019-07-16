@@ -1,0 +1,3 @@
+﻿  greeter_client.cc
+d:\yarkey_2019\grpc\include\grpcpp\impl\codegen\proto_buffer_writer.h(89): warning C4244: “初始化”: 从“int64_t”转换到“size_t”，可能丢失数据
+  yarkey_grpc_client.vcxproj -> D:\yarkey_2019\grpc\.build\Debug\yarkey_grpc_client.exe
