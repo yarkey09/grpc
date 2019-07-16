@@ -149,3 +149,7 @@ cmake-build-debug/
 
 # Benchmark outputs
 BenchmarkDotNet.Artifacts/
+
+# Yarkey project build output
+/yarkey_grpc_client/Debug/
+/yarkey_grpc_server/Debug/
