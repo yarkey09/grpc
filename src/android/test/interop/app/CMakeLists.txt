@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(PROTOBUF_PROTOC_EXECUTABLE "/usr/local/bin/protoc" CACHE STRING "Protoc binary on host")
-set(gRPC_CPP_PLUGIN_EXECUTABLE "/usr/local/bin/grpc_cpp_plugin" CACHE STRING "gRPC CPP plugin binary on host")
+# set(helloworld_PROTOBUF_PROTOC_EXECUTABLE "/usr/local/bin/protoc" CACHE STRING "Protoc binary on host")
+# set(helloworld_GRPC_CPP_PLUGIN_EXECUTABLE "/usr/local/bin/grpc_cpp_plugin" CACHE STRING "gRPC CPP plugin binary on host")
+
+# TODO: 外部设置环境变量
+set(helloworld_PROTOBUF_PROTOC_EXECUTABLE "D:\\yarkey_2019\\grpc\\.build\\third_party\\protobuf\\Debug\\protoc.exe" CACHE STRING "Protoc binary on host")
+set(helloworld_GRPC_CPP_PLUGIN_EXECUTABLE "D:\\yarkey_2019\\grpc\\.build\\Debug\\grpc_cpp_plugin.exe" CACHE STRING "gRPC CPP plugin binary on host")
 
 set(GRPC_SRC_DIR ../../../../../)
 

@@ -29,7 +29,7 @@ android {
                 arguments '-Dhelloworld_GRPC_CPP_PLUGIN_EXECUTABLE=' + grpc_cpp_plugin
             }
         }
-        ndk.abiFilters 'x86'
+        ndk.abiFilters 'armeabi-v7a'
     }
     buildTypes {
         debug {
