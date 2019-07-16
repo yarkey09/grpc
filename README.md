@@ -1,85 +1,57 @@
 gRPC - An RPC library and framework
 ===================================
 
-gRPC is a modern, open source, high-performance remote procedure call (RPC) framework that can run anywhere. gRPC enables client and server applications to communicate transparently, and simplifies the building of connected systems.
+Fork from : https://github.com/grpc/grpc
 
-<table>
-  <tr>
-    <td><b>Homepage:</b></td>
-    <td><a href="https://grpc.io/">grpc.io</a></td>
-  </tr>
-  <tr>
-    <td><b>Mailing List:</b></td>
-    <td><a href="https://groups.google.com/forum/#!forum/grpc-io">grpc-io@googlegroups.com</a></td>
-  </tr>
-</table>
+## Setup Guide on Windows-OS
 
-[![Join the chat at https://gitter.im/grpc/grpc](https://badges.gitter.im/grpc/grpc.svg)](https://gitter.im/grpc/grpc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+### 1. install
+[visual studio](https://visualstudio.microsoft.com/zh-hans/vs/older-downloads/)  
+[golang](https://golang.org/dl/)  
+[cmake](https://cmake.org/download/)  
+[active state perl](https://www.activestate.com/activeperl/)  
+[yasm](http://yasm.tortall.net/)  
+[android studio](https://developer.android.com/studio)  
 
-# To start using gRPC
+### 2. get source code
+```
+git clone https://github.com/yarkey09/grpc.git grpc  
+cd grpc  
+git submodule update --init
+```
 
-To maximize usability, gRPC supports the standard method for adding dependencies to a user's chosen language (if there is one).
-In most languages, the gRPC runtime comes as a package available in a user's language package manager.
+### 3. build (Windows / Visual Studio)
+```
+md .build
+cd .build
+cmake .. -G "Visual Studio 15 2017"
+```
 
-For instructions on how to use the language-specific gRPC runtime for a project, please refer to these documents
+open /.build/grpc.sln by Visual Studio  
+build **ALL_BUILD** project  
+build **INSTALL** project  
 
- * [C++](src/cpp): follow the instructions under the `src/cpp` directory
- * [C#](src/csharp): NuGet package `Grpc`
- * [Dart](https://github.com/grpc/grpc-dart): pub package `grpc`
- * [Go](https://github.com/grpc/grpc-go): `go get google.golang.org/grpc`
- * [Java](https://github.com/grpc/grpc-java): Use JARs from Maven Central Repository
- * [Node](https://github.com/grpc/grpc-node): `npm install grpc`
- * [Objective-C](src/objective-c): Add `gRPC-ProtoRPC` dependency to podspec
- * [PHP](src/php): `pecl install grpc`
- * [Python](src/python/grpcio): `pip install grpcio`
- * [Ruby](src/ruby): `gem install grpc`
- * [WebJS](https://github.com/grpc/grpc-web): follow the grpc-web instructions
+generate helloworld-proto c++ files by .bat script
+```
+cd yarkey_grpc_server
+yarkey_generate_pb.bat
+```
 
-Per-language quickstart guides and tutorials can be found in the [documentation section on the grpc.io website](https://grpc.io/docs/). Code examples are available in the [examples](examples) directory.
+### 4. build (Android / Android Studio)
+open "grpc\examples\android\helloworld" project (with settings.gradle) by Android Studio  
+gradle sync  
+download buildTools, sdk, ndk if needed  
+edit gradle.properties, make sure paths to the protoc and grpc_cpp_plugin binaries
 
-Precompiled bleeding-edge package builds of gRPC `master` branch's `HEAD` are uploaded daily to [packages.grpc.io](https://packages.grpc.io).
-
-# To start developing gRPC
-
-Contributions are welcome!
-
-Please read [How to contribute](CONTRIBUTING.md) which will guide you through the entire workflow of how to build the source code, how to run the tests, and how to contribute changes to
-the gRPC codebase.
-The "How to contribute" document also contains info on how the contribution process works and contains best practices for creating contributions.
-
-# Troubleshooting
-
-Sometimes things go wrong. Please check out the [Troubleshooting guide](TROUBLESHOOTING.md) if you are experiencing issues with gRPC.
-
-# Performance 
-
-See the [Performance dashboard](http://performance-dot-grpc-testing.appspot.com/explore?dashboard=5636470266134528) for performance numbers of the latest released version.
-
-# Concepts
-
-See [gRPC Concepts](CONCEPTS.md)
-
-# About This Repository
-
-This repository contains source code for gRPC libraries implemented in multiple languages written on top of a shared C core library [src/core](src/core).
-
-Libraries in different languages may be in various states of development. We are seeking contributions for all of these libraries:
-
-| Language                | Source                              |
-|-------------------------|-------------------------------------|
-| Shared C [core library] | [src/core](src/core)                |
-| C++                     | [src/cpp](src/cpp)                  |
-| Ruby                    | [src/ruby](src/ruby)                |
-| Python                  | [src/python](src/python)            |
-| PHP                     | [src/php](src/php)                  |
-| C#                      | [src/csharp](src/csharp)            |
-| Objective-C             | [src/objective-c](src/objective-c)  |
-
-| Language                | Source repo                                          |
-|-------------------------|------------------------------------------------------|
-| Java                    | [grpc-java](http://github.com/grpc/grpc-java)        |
-| Go                      | [grpc-go](http://github.com/grpc/grpc-go)            |
-| NodeJS                  | [grpc-node](https://github.com/grpc/grpc-node)       |
-| WebJS                   | [grpc-web](https://github.com/grpc/grpc-web)         |
-| Dart                    | [grpc-dart](https://github.com/grpc/grpc-dart)       |
+```
+protoc=D\:\\yarkey_2019\\grpc\\.build\\third_party\\protobuf\\Debug\\protoc.exe
+grpc_cpp_plugin=D\:\\yarkey_2019\\grpc\\.build\\Debug\\grpc_cpp_plugin.exe
+```
+edit build.gradle, make sure ndk.abiFilters target your test device
+```
+defaultConfig {
+    ndk.abiFilters 'armeabi-v7a'  
+}
+```
+gradlew assembleDebug
 
