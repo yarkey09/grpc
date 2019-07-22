@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.demo.yarkey";
+option java_outer_classname = "AccountServiceProto";
+option objc_class_prefix = "ACS";
+
+package yarkey;
+
+message Error {
+  int32 error_code = 1;
+  bytes error_message = 2;
+}
+
+// 注册请求包
+message RegisteReq {
+  bytes name = 1;		// 昵称
+  bytes password = 2;	// 密码
+}
+
+// 注册回包
+message RegisterRsp {
+  Error error = 1;		// 出错信息
+  bytes account_id = 2;	// 新账户id
+}
+
+// 认证登录请求包
+message AuthReq {
+  bytes account_id = 1;	// 账户id
+  bytes password = 2;	// 密码
+  bytes device_id = 3;  // 设备id
+}
+
+// 认证登录回包
+message AuthRsp {
+  Error error = 1;		// 出错信息
+  bytes token = 2;		// 票据
+}
+
+// 验票请求包
+message CheckTokenReq {
+  bytes token = 1;      // 票据
+  bytes device_id = 2;  // 设备id
+}
+
+// 验票回包
+message CheckTokenRsp {
+  Error error = 1;		// 出错信息
+  bytes account_id = 2;	// 账户id
+}
+
+// 服务接口
+service AuthService {
+  // 注册，生成新账户ID
+  rpc Register(RegisteReq) returns (RegisterRsp) {}
+  // 认证登录
+  rpc Auth (AuthReq) returns (AuthRsp) {}
+  // 验票
+  rpc CheckToken (CheckTokenReq) returns (CheckTokenRsp) {}
+
+}
