@@ -1,5 +1,7 @@
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <grpcpp/grpcpp.h>
 #include "examples/cpp/yarkey_auth/protos/yarkey_auth.grpc.pb.h"
@@ -7,6 +9,7 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+using grpc::SslCredentials;
 
 using yarkey::RegisteReq;
 using yarkey::RegisterRsp;
@@ -42,7 +45,7 @@ class AuthClient {
     // Act upon its status.
     if (status.ok()) {
       // std::cout << "Register : " << reply.account_id << std::endl;
-      return "Yarkey"; // reply.account_id;
+      return "Register Success ! AccountId:" + reply.account_id(); // reply.account_id;
     } else {
       std::cout << status.error_code() << ": " << status.error_message() << std::endl;
       return "RPC failed";
@@ -53,16 +56,41 @@ class AuthClient {
         std::unique_ptr<AuthService::Stub> stub_;
 };
 
+// TODO: 代码整理
+static void read(const std::string &filename, std::string & data) {
+	std::ifstream file(filename.c_str(), std::ios::in);
+	if (file.is_open())	{
+		std::stringstream ss;
+		ss << file.rdbuf();
+		file.close();
+		data = ss.str();
+	}
+}
+
+void GetClientCredential(grpc::SslCredentialsOptions &sslOps) {
+	std::string key;
+	std::string cert;
+	std::string root;
+
+	read("D:\\yarkey\\github-grpc\\key_store\\client.key", key);
+	read("D:\\yarkey\\github-grpc\\key_store\\client.crt", cert);
+	read("D:\\yarkey\\github-grpc\\key_store\\ca.crt", root);
+
+	sslOps.pem_private_key = key;
+  sslOps.pem_cert_chain = cert;
+  sslOps.pem_root_certs = root;
+}
+
 int main(int argc, char** argv) {
-    // Instantiate the client. It requires a channel, out of which the actual RPCs
-    // are created. This channel models a connection to an endpoint (in this case,
-    // localhost at port 50051). We indicate that the channel isn't authenticated
-    // (use of InsecureChannelCredentials()).
-    AuthClient client(grpc::CreateChannel(
-        "localhost:50052", grpc::InsecureChannelCredentials()));
-    std::string user("yarkey");
-    std::string password("123456");
-    std::string reply = client.Register(user, password);
-    std::cout << "Auth result : " << reply << std::endl;
-    return 0;
+  
+  grpc::SslCredentialsOptions sslOps;
+  GetClientCredential(sslOps);
+  auto credentials = grpc::SslCredentials(sslOps);
+
+  AuthClient client(grpc::CreateChannel("localhost:50052", credentials));
+  std::string user("yarkey");
+  std::string password("123456");
+  std::string reply = client.Register(user, password);
+  std::cout << "Auth result : " << reply << std::endl;
+  return 0;
 }

@@ -3,6 +3,8 @@
 #include "examples/cpp/yarkey_auth/protos/yarkey_auth.grpc.pb.h"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 using yarkey::AuthService;
 using yarkey::RegisteReq;
@@ -18,10 +20,37 @@ using grpc::ServerContext;
 using grpc::ServerBuilder;
 
 
+int autoIncreaseNumber = 0;
+
+static void read(const std::string &filename, std::string & data) {
+	std::ifstream file(filename.c_str(), std::ios::in);
+	if (file.is_open())	{
+		std::stringstream ss;
+		ss << file.rdbuf();
+		file.close();
+		data = ss.str();
+	}
+}
+
+void GetServerCredential(grpc::SslServerCredentialsOptions &sslOps) {
+	std::string key;
+	std::string cert;
+	std::string root;
+
+	read("D:\\yarkey\\github-grpc\\key_store\\server.key", key);
+	read("D:\\yarkey\\github-grpc\\key_store\\server.crt", cert);
+	read("D:\\yarkey\\github-grpc\\key_store\\ca.crt", root);
+
+	grpc::SslServerCredentialsOptions::PemKeyCertPair key_cert = { key, cert };
+	sslOps.pem_root_certs = root;
+	sslOps.pem_key_cert_pairs.push_back(key_cert);
+}
+
 class AuthServiceImpl final : public AuthService::Service {
     // 注册，生成新账户ID
     Status Register(ServerContext* context, const RegisteReq* request, RegisterRsp* response) override {
-        std::cout << "Register " << request << std::endl;
+        std::cout << "Register : name=" << request->name() << ", password=" << request->password() << std::endl;
+        response->set_account_id("xxx" + std::to_string((autoIncreaseNumber ++)));
         return Status::OK;
     }
     // 认证登录
@@ -42,7 +71,12 @@ void RunServer() {
 
     ServerBuilder builder;
     // Listen on the given address without any authentication mechanism.
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+
+    grpc::SslServerCredentialsOptions ssl_opts;
+    GetServerCredential(ssl_opts);
+    auto creds = grpc::SslServerCredentials(ssl_opts);
+
+    builder.AddListeningPort(server_address, creds);
     // Register "service" as the instance through which we'll communicate with
     // clients. In this case it corresponds to an *synchronous* service.
     builder.RegisterService(&service);
