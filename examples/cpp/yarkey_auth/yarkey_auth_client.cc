@@ -24,36 +24,62 @@ class AuthClient {
         AuthClient(std::shared_ptr<Channel> channel)
             : stub_(AuthService::NewStub(channel)) {}
 
-      // Assembles the client's payload, sends it and presents the response back
-  // from the server.
-  std::string Register(const std::string& user, const std::string& password) {
+  RegisterRsp * Register(const std::string& user, const std::string& password) {
     // Data we are sending to the server.
     RegisteReq request;
     request.set_name(user);
     request.set_password(password);
 
     // Container for the data we expect from the server.
-    RegisterRsp reply;
+    RegisterRsp * reply = new RegisterRsp();
 
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
 
     // The actual RPC.
-    Status status = stub_->Register(&context, request, &reply);
+    Status status = stub_->Register(&context, request, reply);
 
     // Act upon its status.
     if (status.ok()) {
-      // std::cout << "Register : " << reply.account_id << std::endl;
-      return "Register Success ! AccountId:" + reply.account_id(); // reply.account_id;
+      std::cout << "Register Success : AccountId = " << reply->account_id() << std::endl;
+      return reply;
     } else {
-      std::cout << status.error_code() << ": " << status.error_message() << std::endl;
-      return "RPC failed";
+      std::cout << "Register Failed : " << status.error_code() << ": " << status.error_message() << std::endl;
+      return nullptr;
     }
   }
 
-    private:
-        std::unique_ptr<AuthService::Stub> stub_;
+  AuthRsp * Auth(const std::string& id, const std::string& password) {
+    // Data we are sending to the server.
+    AuthReq request;
+    request.set_account_id(id);
+    request.set_password(password);
+    request.set_device_id("13579111315171921");
+
+    AuthRsp * reply = new AuthRsp();
+    ClientContext context;
+
+    // The actual RPC.
+    Status status = stub_->Auth(&context, request, reply);
+
+    // Act upon its status.
+    if (status.ok()) {
+      std::cout
+        << "Auth Success : token="
+        << reply->token()
+        << ", errorCode=" << reply->error().error_code()
+        << ", error=" << reply->error().error_message()
+        << std::endl;
+      return reply;
+    } else {
+      std::cout << "Auth Failed : " << status.error_code() << ": " << status.error_message() << std::endl;
+      return nullptr;
+    }
+  }
+
+  private:
+    std::unique_ptr<AuthService::Stub> stub_;
 };
 
 // TODO: 代码整理
@@ -90,7 +116,7 @@ int main(int argc, char** argv) {
   AuthClient client(grpc::CreateChannel("localhost:50052", credentials));
   std::string user("yarkey");
   std::string password("123456");
-  std::string reply = client.Register(user, password);
-  std::cout << "Auth result : " << reply << std::endl;
+  RegisterRsp * registerRsp = client.Register(user, password);
+  AuthRsp * authRsp = client.Auth(registerRsp->account_id(), "123458");
   return 0;
 }

@@ -31,7 +31,7 @@ cc_binary(
 
 cc_binary(
     name = "yarkey_auth_server",
-    srcs = ["yarkey_auth_server.cc"],
+    srcs = ["yarkey_auth_server.cc", "account_info.cc", "token_holder.cc", "utils.cc"],
     defines = ["BAZEL_BUILD"],
     deps = [
         ":yarkey_auth_cc_grpc",

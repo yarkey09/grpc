@@ -1,11 +1,9 @@
-
 #include <grpcpp/grpcpp.h>
 #include "examples/cpp/yarkey_auth/protos/yarkey_auth.grpc.pb.h"
 
 #include "account_info.h"
-#include "account_info.cc"
-
 #include "token_holder.h"
+#include "utils.h"
 
 #include <iostream>
 #include <fstream>
@@ -17,6 +15,7 @@ using yarkey::RegisteReq;
 using yarkey::RegisterRsp;
 using yarkey::AuthReq;
 using yarkey::AuthRsp;
+using yarkey::Error;
 using yarkey::CheckTokenReq;
 using yarkey::CheckTokenRsp;
 using yarkey::AccountInfo;
@@ -68,40 +67,69 @@ class AuthServiceImpl final : public AuthService::Service {
     Status Register(ServerContext* context, const RegisteReq* request, RegisterRsp* response) override {
         std::cout << "Register : name=" << request->name() << ", password=" << request->password() << std::endl;
 
-        string newAccountId = "xxx" + std::to_string(autoIncreaseNumber ++);
+        string newAccountId = std::to_string(autoIncreaseNumber ++) + "_" + yarkey::randStr(new char[8], 8);
         AccountInfoRef newAccountInfo = new AccountInfo(newAccountId, request->password(), request->name());
         registered_account_map.insert(std::pair<string, AccountInfoRef>(newAccountId, newAccountInfo));
 
         response->set_account_id(newAccountId);
-        return Status::OK;
+        return Status::OK;  
     }
 
     // 认证登录
     Status Auth(ServerContext* context, const AuthReq* request, AuthRsp* response) override {
-        std::cout << "Auth " << request << std::endl;
+        string inputId = request->account_id();
+        string inputPassword = request->password();
+        string deviceId = request->device_id();
+        std::cout << "Auth : id=" << inputId << ", password=" << inputPassword << ", deviceId=" << deviceId << std::endl;
+
+        int errorCode = 0;
+        string errorMsg = "";
 
         // 先检查身份 accountId+password
         // TODO: 这里后面改成独立一个服务，认证身份 和 换票换deviceId 独立
-        auto iter = registered_account_map.find(request->account_id());
+        auto iter = registered_account_map.find(inputId);
         if(iter != registered_account_map.end()) {
-            string inputId = request->account_id();
-            string inputPassword = request->password();
             auto accountInfoRef = iter->second;
-            if (strcmp(accountInfoRef->getAccountId().c_str(), inputId.c_str()) 
-                && strcmp(accountInfoRef->getPassword().c_str(), inputPassword.c_str())) {
-                
+            std::cout << "Auth : id=" << accountInfoRef->getAccountId() << ", password=" << accountInfoRef->getPassword() << std::endl;
+            if (strcmp(accountInfoRef->getAccountId().c_str(), inputId.c_str()) == 0 
+                && strcmp(accountInfoRef->getPassword().c_str(), inputPassword.c_str()) == 0) {
+
                 // ID+密码正确，更新 device Id, 通知下线
-                auto tokenIter = login_token_map.find(request->account_id());
+                string * token = nullptr;
+
+                auto tokenIter = login_token_map.find(inputId);
                 if (tokenIter != login_token_map.end()) {
                     auto tokenHolderRef = tokenIter->second;
-                    
+                    if (strcmp(deviceId.c_str(), tokenHolderRef->getDeviceId().c_str()) == 0) {
+                        token = &tokenHolderRef->getToken();
+                        std::cout << "the same token : " << *token << std::endl;
+                    }
                 }
+
+                if (token == nullptr) {
+                    token = new string(yarkey::randStr(new char[64], 64));
+                    TokenHolderRef tokenHolderRef = new TokenHolder(inputId, inputPassword, *token);
+                    login_token_map.insert(std::pair<string, TokenHolderRef>(inputId, tokenHolderRef));
+                    std::cout << "new token : " << *token << std::endl;
+                }
+
+                std::cout << "Auth Success : token=" << token << std::endl;
+                response->set_allocated_token(token);
+                return Status::OK;
+            } else {
+
+                std::cout << "Invalid account id or password" << std::endl;
+                errorCode = 1024;
             }
+        } else {
+            std::cout << "AccountId Invalid, has not registered" << std::endl;
+            errorCode = 1025;
         }
         
-
-        request->account_id();
-
+        Error * err = new Error();
+        err->set_error_code(errorCode);
+        err->set_allocated_error_message(new string("invalid account id | password"));
+        response->set_allocated_error(err);
         return Status::OK;
     }
 
